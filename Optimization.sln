@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".tests", ".tests", "{0B022E98-CBEA-4D5F-87AD-7C6EF88BC3A4}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Optimization.Linear.Tests", ".tests\Optimization.Linear.Tests\Optimization.Linear.Tests.fsproj", "{01E90646-7C97-49FD-B422-FA051EBAABBD}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Optimization.Linear", "Optimization.Linear\Optimization.Linear.fsproj", "{FD9EBADB-7483-4BCF-911F-D966B178C830}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{796E07AC-BA0F-4800-B926-0AA74278FB61}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".targets", ".targets", "{D7CBA7CE-2EA8-46E9-A380-9839F588C7C2}"
+	ProjectSection(SolutionItems) = preProject
+		.targets\test.targets = .targets\test.targets
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{01E90646-7C97-49FD-B422-FA051EBAABBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01E90646-7C97-49FD-B422-FA051EBAABBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01E90646-7C97-49FD-B422-FA051EBAABBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01E90646-7C97-49FD-B422-FA051EBAABBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD9EBADB-7483-4BCF-911F-D966B178C830}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD9EBADB-7483-4BCF-911F-D966B178C830}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD9EBADB-7483-4BCF-911F-D966B178C830}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD9EBADB-7483-4BCF-911F-D966B178C830}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{01E90646-7C97-49FD-B422-FA051EBAABBD} = {0B022E98-CBEA-4D5F-87AD-7C6EF88BC3A4}
+	EndGlobalSection
+EndGlobal
