@@ -17,23 +17,91 @@
     A * x <= b
 *)
 
+module Vector = begin 
+  module Generic = begin
+     let toList vector =
+       vector
+         |> Vector.Generic.toArray 
+         |> List.ofArray 
+  end
+end
+
+module RowVector = begin
+  module Generic = begin
+     let toList vector =
+       vector
+         |> RowVector.Generic.toArray 
+         |> List.ofArray
+  end
+end 
+
+type Vector<'a> with
+  member self.Items indices =
+    indices
+      |> Seq.map (Vector.Generic.get self) 
+      |> Vector.Generic.ofSeq
+
+  member self.ToList() =
+    self |> Vector.Generic.toList 
+end
+
+module Matrix = begin
+  module Generic = begin
+    let ofRows (rows: RowVector<'a> seq) = 
+      rows |> Matrix.Generic.ofSeq
+
+    let isSquare (matrix: Matrix<'a>) =
+      matrix.NumCols = matrix.NumRows
+
+    let augment (first:Matrix<'a>) (second:Matrix<'a>) = 
+      if first.NumRows <> second.NumRows then
+        failwith "Must have same count of rows"
+
+      let appendRows (first, second) = 
+        [first; second]
+          |> Seq.map RowVector.Generic.toList
+          |> Seq.reduce (@)
+          |> RowVector.Generic.ofSeq
+
+      let allRows (matrix:Matrix<'a>) =
+        [0..matrix.NumRows - 1]
+          |> Seq.map matrix.Row
+
+      (allRows first, allRows second)
+        ||> Seq.zip
+        |> Seq.map appendRows
+        |> ofRows
+
+    let inv (matrix: Matrix<'a>) = 
+      if not (isSquare matrix) then
+        invalidArg "matrix" "must be square"
+
+      let dim = matrix.NumCols
+
+      let kickZero matrix =
+        matrix
+        
+      let addIdentity matrix = 
+        let identity = Matrix.Generic.identity dim
+        augment matrix identity 
+        
+      matrix
+        |> kickZero
+        |> addIdentity
+  end
+end
+
 type Matrix<'a> with 
   member self.Columns(indices: int list) =
     let indToCol =
-      self.Column 
-        >> Vector.Generic.toArray 
-        >> List.ofArray
+      self.Column >> Vector.Generic.toList 
          
     indices 
       |> List.map (indToCol) 
       |> Matrix.Generic.ofList
-end
 
-type Vector<'a> with
-  member self.Items(indices: int list) =
-    indices 
-      |> List.map (Vector.Generic.get self) 
-      |> Vector.Generic.ofList
+   member self.IsSquare =
+     Matrix.Generic.isSquare self
 end
 
 // Example   
