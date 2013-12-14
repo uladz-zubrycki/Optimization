@@ -17,91 +17,197 @@
     A * x <= b
 *)
 
+[<AutoOpen>]
+module EqualityPatterns = begin
+  let private factory (predicate: 'a -> 'b -> bool) value arg =
+    if predicate arg value then
+      Some()
+    else
+      None
+  
+  let (|Equals|_|) value arg = 
+    factory (=) value arg
+
+  let (|Unequals|_|) value arg = 
+    factory (<>) value arg
+  
+  let (|Less|_|) value arg = 
+    factory (<) value arg 
+  
+  let (|Bigger|_|) value arg = 
+    factory (>) value arg  
+  
+  let (|BiggerOrEqual|_|) value arg = 
+    factory (>=) value arg  
+  
+  let (|LessOrEqual|_|) value arg = 
+    factory (<=) value arg 
+end 
+
 module Vector = begin 
-  module Generic = begin
-     let toList vector =
-       vector
-         |> Vector.Generic.toArray 
-         |> List.ofArray 
-  end
+  let toList vector =
+    vector
+      |> Vector.toArray 
+      |> List.ofArray
+  
+  let items indices vector =
+    indices
+      |> Seq.map (Vector.get vector) 
+      |> Vector.ofSeq
+
+  let tryFindIndex predicate vector =
+    vector
+      |> Vector.toArray
+      |> Array.tryFindIndex predicate
 end
 
 module RowVector = begin
-  module Generic = begin
-     let toList vector =
-       vector
-         |> RowVector.Generic.toArray 
-         |> List.ofArray
-  end
-end 
+  let toList vector =
+    vector
+      |> RowVector.toArray 
+      |> List.ofArray
 
-type Vector<'a> with
-  member self.Items indices =
-    indices
-      |> Seq.map (Vector.Generic.get self) 
-      |> Vector.Generic.ofSeq
+  let concat (first, second) = 
+    [first; second]
+      |> Seq.map toList
+      |> Seq.reduce (@)
+      |> RowVector.ofSeq
 
-  member self.ToList() =
-    self |> Vector.Generic.toList 
+  let map func row =
+    row
+      |> RowVector.toArray
+      |> Array.map func
+      |> RowVector.ofArray
+
+  let div num row= 
+    row
+      |> map ((/) num)
 end
 
 module Matrix = begin
-  module Generic = begin
-    let ofRows (rows: RowVector<'a> seq) = 
-      rows |> Matrix.Generic.ofSeq
+  let ofRows (rows: rowvec seq) = 
+    rows |> Matrix.ofSeq
 
-    let isSquare (matrix: Matrix<'a>) =
-      matrix.NumCols = matrix.NumRows
+  let ofColumns (columns: vector seq) = 
+    columns 
+      |> Seq.map Vector.transpose
+      |> ofRows
+      |> Matrix.transpose
 
-    let augment (first:Matrix<'a>) (second:Matrix<'a>) = 
-      if first.NumRows <> second.NumRows then
-        failwith "Must have same count of rows"
-
-      let appendRows (first, second) = 
-        [first; second]
-          |> Seq.map RowVector.Generic.toList
-          |> Seq.reduce (@)
-          |> RowVector.Generic.ofSeq
-
-      let allRows (matrix:Matrix<'a>) =
-        [0..matrix.NumRows - 1]
-          |> Seq.map matrix.Row
-
-      (allRows first, allRows second)
-        ||> Seq.zip
-        |> Seq.map appendRows
-        |> ofRows
-
-    let inv (matrix: Matrix<'a>) = 
-      if not (isSquare matrix) then
-        invalidArg "matrix" "must be square"
-
-      let dim = matrix.NumCols
-
-      let kickZero matrix =
-        matrix
-        
-      let addIdentity matrix = 
-        let identity = Matrix.Generic.identity dim
-        augment matrix identity 
-        
-      matrix
-        |> kickZero
-        |> addIdentity
-  end
-end
-
-type Matrix<'a> with 
-  member self.Columns(indices: int list) =
-    let indToCol =
-      self.Column >> Vector.Generic.toList 
-         
+  let columns indices (matrix:matrix) =
     indices 
-      |> List.map (indToCol) 
-      |> Matrix.Generic.ofList
+      |> List.map (matrix.Column) 
+      |> ofColumns
 
-   member self.IsSquare =
-     Matrix.Generic.isSquare self
+  let rows indices (matrix:matrix) =
+    indices 
+      |> List.map (matrix.Row) 
+      |> ofRows
+
+  let allRows (matrix:matrix) =
+    [0..matrix.NumRows - 1]
+      |> Seq.map matrix.Row
+
+  let allColumns (matrix:matrix) =
+    [0..matrix.NumCols - 1]
+      |> Seq.map matrix.Column
+
+  let isSquare (matrix: matrix) =
+    matrix.NumCols = matrix.NumRows
+
+  let exchangeRows first second (matrix:matrix) =
+    if first < 0 || first > matrix.NumRows then
+      invalidArg "first" "invalid index" 
+
+    if second < 0 || first > matrix.NumRows then
+      invalidArg "second" "invalid index" 
+    
+    if first = second then
+      matrix
+    else
+      let getRow = function
+        | Equals first -> matrix.Row second
+        | Equals second -> matrix.Row first
+        | x -> matrix.Row x
+
+      [0..matrix.NumRows - 1]
+        |> Seq.map getRow
+        |> ofRows
+     
+  let augment (first:matrix) (second:matrix) = 
+    if first.NumRows <> second.NumRows then
+      failwith "Must have same count of rows."
+
+    (allRows first, allRows second)
+      ||> Seq.zip
+      |> Seq.map RowVector.concat
+      |> ofRows
+
+  let appendRow (row:rowvec) matrix = 
+    matrix
+      |> allRows
+      |> Seq.append <| [row]
+      |> ofRows
+
+  let appendCol (col:vector) matrix = 
+    matrix
+      |> allColumns
+      |> Seq.append <| [col]
+      |> ofColumns
+
+  let inv (matrix: matrix) = 
+    if not (isSquare matrix) then
+      invalidArg "matrix" "must be square"
+
+    let dim = matrix.NumCols
+
+    let removeZero ind (matrix:matrix) =
+      matrix.Column ind
+        |> Vector.tryFindIndex ((<>) 0.0)
+        |> function 
+           | None -> failwith "Determinant is zero, cause matrix contains zero column"
+           | Some(foundInd) when foundInd = ind -> matrix
+           | Some(foundInd) -> 
+               matrix |> exchangeRows ind foundInd
+
+    let lowTriangular (matrix:matrix) = 
+      let getSubtractor (cur:rowvec) (ind: int) (next:rowvec)= 
+        cur
+          |> RowVector.div cur.[ind]  
+          |> (*) next.[ind] 
+
+      [0..matrix.NumRows - 2]
+        |> Seq.fold
+            (fun (acc:matrix) ind -> 
+                let rows = acc
+                             |> removeZero ind
+                             |> allRows
+
+                let top = rows |> Seq.take (ind + 1)
+                let bottom = 
+                      rows
+                        |> Seq.skip (ind + 1)
+                        |> Seq.map (fun row -> 
+                                      row
+                                        |> getSubtractor (acc.Row ind) ind 
+                                        |> (-) row 
+                                    ) 
+                top  
+                  |> Seq.append bottom
+                  |> ofRows  
+            ) 
+            matrix 
+
+    let addIdentity matrix = 
+      Matrix.identity dim |> augment matrix
+
+    let getResult (matrix:matrix) =
+      matrix
+
+    matrix
+      |> addIdentity
+      |> lowTriangular
+      |> getResult
 end
 
 // Example   

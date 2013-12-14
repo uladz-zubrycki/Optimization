@@ -10,4 +10,4 @@ let ``some test`` () =
 
 [<Fact>]
 let ``some another test`` () = 
-  5 |> should equal 6
+  5 |> should equal 5
