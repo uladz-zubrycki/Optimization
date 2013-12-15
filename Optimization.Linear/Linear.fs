@@ -47,41 +47,35 @@ end
 module Vector = begin 
   let toList vector =
     vector
-      |> Vector.toArray 
-      |> List.ofArray
+    |> Vector.toArray 
+    |> List.ofArray
   
   let items indices vector =
     indices
-      |> Seq.map (Vector.get vector) 
-      |> Vector.ofSeq
-
-  let tryFindIndex predicate vector =
-    vector
-      |> Vector.toArray
-      |> Array.tryFindIndex predicate
+    |> Seq.map (Vector.get vector) 
+    |> Vector.ofSeq
 end
 
 module RowVector = begin
   let toList vector =
     vector
-      |> RowVector.toArray 
-      |> List.ofArray
+    |> RowVector.toArray 
+    |> List.ofArray
 
   let concat (first, second) = 
     [first; second]
-      |> Seq.map toList
-      |> Seq.reduce (@)
-      |> RowVector.ofSeq
+    |> Seq.map toList
+    |> Seq.reduce (@)
+    |> RowVector.ofSeq
 
   let map func row =
     row
-      |> RowVector.toArray
-      |> Array.map func
-      |> RowVector.ofArray
+    |> RowVector.toArray
+    |> Array.map func
+    |> RowVector.ofArray
 
   let div num row= 
-    row
-      |> map ((/) num)
+    row |> map (fun el -> el / num)
 end
 
 module Matrix = begin
@@ -90,27 +84,27 @@ module Matrix = begin
 
   let ofColumns (columns: vector seq) = 
     columns 
-      |> Seq.map Vector.transpose
-      |> ofRows
-      |> Matrix.transpose
+    |> Seq.map Vector.transpose
+    |> ofRows
+    |> Matrix.transpose
 
   let columns indices (matrix:matrix) =
     indices 
-      |> List.map (matrix.Column) 
-      |> ofColumns
+    |> List.map (matrix.Column) 
+    |> ofColumns
 
   let rows indices (matrix:matrix) =
     indices 
-      |> List.map (matrix.Row) 
-      |> ofRows
+    |> List.map (matrix.Row) 
+    |> ofRows
 
   let allRows (matrix:matrix) =
-    [0..matrix.NumRows - 1]
-      |> Seq.map matrix.Row
+    [0..matrix.NumRows - 1] 
+    |> Seq.map matrix.Row
 
   let allColumns (matrix:matrix) =
     [0..matrix.NumCols - 1]
-      |> Seq.map matrix.Column
+    |> Seq.map matrix.Column
 
   let isSquare (matrix: matrix) =
     matrix.NumCols = matrix.NumRows
@@ -131,29 +125,29 @@ module Matrix = begin
         | x -> matrix.Row x
 
       [0..matrix.NumRows - 1]
-        |> Seq.map getRow
-        |> ofRows
+      |> Seq.map getRow
+      |> ofRows
      
   let augment (first:matrix) (second:matrix) = 
     if first.NumRows <> second.NumRows then
       failwith "Must have same count of rows."
 
     (allRows first, allRows second)
-      ||> Seq.zip
-      |> Seq.map RowVector.concat
-      |> ofRows
+    ||> Seq.zip
+    |> Seq.map RowVector.concat
+    |> ofRows
 
   let appendRow (row:rowvec) matrix = 
     matrix
-      |> allRows
-      |> Seq.append <| [row]
-      |> ofRows
+    |> allRows
+    |> Seq.append [row]
+    |> ofRows
 
   let appendCol (col:vector) matrix = 
     matrix
-      |> allColumns
-      |> Seq.append <| [col]
-      |> ofColumns
+    |> allColumns
+    |> Seq.append [col]
+    |> ofColumns
 
   let inv (matrix: matrix) = 
     if not (isSquare matrix) then
@@ -163,40 +157,42 @@ module Matrix = begin
 
     let removeZero ind (matrix:matrix) =
       matrix.Column ind
-        |> Vector.tryFindIndex ((<>) 0.0)
-        |> function 
-           | None -> failwith "Determinant is zero, cause matrix contains zero column"
-           | Some(foundInd) when foundInd = ind -> matrix
-           | Some(foundInd) -> 
-               matrix |> exchangeRows ind foundInd
+      |> Seq.skip ind
+      |> Seq.tryFindIndex ((<>) 0.0)
+      |> function 
+         | None -> failwith "Determinant is zero, cause matrix contains zero column"
+         | Some(foundInd) when foundInd = 0 -> matrix
+         | Some(foundInd) -> 
+             matrix |> exchangeRows ind foundInd
 
     let lowTriangular (matrix:matrix) = 
-      let getSubtractor (cur:rowvec) (ind: int) (next:rowvec)= 
+      let getSubtractor (cur:rowvec) (ind: int) (next:rowvec) = 
         cur
-          |> RowVector.div cur.[ind]  
-          |> (*) next.[ind] 
+        |> RowVector.div cur.[ind]  
+        |> (*) next.[ind] 
 
       [0..matrix.NumRows - 2]
-        |> Seq.fold
-            (fun (acc:matrix) ind -> 
-                let rows = acc
-                             |> removeZero ind
-                             |> allRows
+      |> Seq.fold
+          (fun (acc:matrix) ind -> 
+              let rows = 
+                acc
+                |> removeZero ind
+                |> allRows
 
-                let top = rows |> Seq.take (ind + 1)
-                let bottom = 
-                      rows
-                        |> Seq.skip (ind + 1)
-                        |> Seq.map (fun row -> 
-                                      row
-                                        |> getSubtractor (acc.Row ind) ind 
-                                        |> (-) row 
-                                    ) 
-                top  
-                  |> Seq.append bottom
-                  |> ofRows  
-            ) 
-            matrix 
+              let top = rows |> Seq.take (ind + 1)
+              let bottom = 
+                rows
+                |> Seq.skip (ind + 1)
+                |> Seq.map 
+                    (fun row -> 
+                       row
+                       |> getSubtractor (acc.Row ind) ind 
+                       |> (-) row 
+                    ) 
+              Seq.append top bottom 
+              |> ofRows  
+          ) 
+          matrix 
 
     let addIdentity matrix = 
       Matrix.identity dim |> augment matrix
@@ -205,9 +201,9 @@ module Matrix = begin
       matrix
 
     matrix
-      |> addIdentity
-      |> lowTriangular
-      |> getResult
+    |> addIdentity
+    |> lowTriangular
+    |> getResult
 end
 
 // Example   
@@ -219,9 +215,13 @@ let m = 2
 let n = 4
 
 let plan = (vector [0.0; 0.0; 1.0; 1.0;], [2; 3])
-let A'b = A.Columns <| snd plan
-let c'b = c.Items <| snd plan
 
+
+let matr = matrix [[3.0;  1.0; 4.0];
+                   [1.0; -2.0; 5.0];
+                   [2.0; 3.0; -2.0]]
+
+let inv = matr |> Matrix.inv
 
 
   
