@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".tests", ".tests", "{0B022E98-CBEA-4D5F-87AD-7C6EF88BC3A4}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Optimization.Linear.Tests", ".tests\Optimization.Linear.Tests\Optimization.Linear.Tests.fsproj", "{01E90646-7C97-49FD-B422-FA051EBAABBD}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Optimization.Linear", "Optimization.Linear\Optimization.Linear.fsproj", "{FD9EBADB-7483-4BCF-911F-D966B178C830}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{796E07AC-BA0F-4800-B926-0AA74278FB61}"
 	ProjectSection(SolutionItems) = preProject
@@ -14,10 +12,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{796E07
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".targets", ".targets", "{D7CBA7CE-2EA8-46E9-A380-9839F588C7C2}"
-	ProjectSection(SolutionItems) = preProject
-		.targets\test.targets = .targets\test.targets
-	EndProjectSection
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Optimization.Linear.Tests", ".tests\Optimization.Linear.Tests\Optimization.Linear.Tests.fsproj", "{01E90646-7C97-49FD-B422-FA051EBAABBD}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Optimization.Linear", "Optimization.Linear\Optimization.Linear.fsproj", "{FD9EBADB-7483-4BCF-911F-D966B178C830}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
