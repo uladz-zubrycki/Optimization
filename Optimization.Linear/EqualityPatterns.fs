@@ -2,24 +2,24 @@
 
 [<AutoOpen>]
 module EqualityPatterns = begin
-  let private check (predicate: 'a -> 'b -> bool) value arg =
+  let private check (predicate: 'a -> 'b -> bool) arg value =
    if predicate arg value then Some() else None
   
-  let (|Equals|_|) value arg = 
-    check (=) value arg
+  let (|Equals|_|) arg value = 
+    check (=) arg value
 
-  let (|Unequals|_|) value arg = 
-    check (<>) value arg
+  let (|Unequals|_|) arg value = 
+    check (<>) arg value
   
-  let (|Less|_|) value arg = 
-    check (<) value arg 
+  let (|Less|_|) arg value = 
+    check (<) arg value 
   
-  let (|Bigger|_|) value arg = 
-    check (>) value arg  
+  let (|Bigger|_|) arg value = 
+    check (>) arg value  
   
-  let (|BiggerOrEqual|_|) value arg = 
-    check (>=) value arg  
+  let (|BiggerOrEqual|_|) arg value = 
+    check (>=) arg value  
   
   let (|LessOrEqual|_|) value arg = 
-    check (<=) value arg 
+    check (<=) arg value 
 end

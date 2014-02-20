@@ -12,4 +12,8 @@ module Vector = begin
     indices
     |> Seq.map (Vector.get vector) 
     |> Vector.ofSeq
+
+  /// Transposition of current vector.
+  let transpose (vector: vector) = 
+    vector.Transpose 
 end

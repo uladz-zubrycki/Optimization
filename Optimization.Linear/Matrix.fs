@@ -116,8 +116,7 @@ module Matrix = begin
     
     let forward (matrix: matrix) = 
       [0..matrix.NumRows - 1]
-      |> Seq.fold
-          (fun (acc: matrix) ind -> 
+      |> Seq.fold (fun (acc: matrix) ind -> 
             let rows = 
               acc
               |> removeZero ind
@@ -130,40 +129,37 @@ module Matrix = begin
             let bottom = 
               rows
               |> Seq.skip (ind + 1)
-              |> Seq.map 
-                  (fun row -> 
+              |> Seq.map (fun row -> 
                     curRow * row.[ind] 
                     |> (-) row 
-                  )
+                 )
 
             bottom
             |> Seq.append [curRow] 
             |> Seq.append top
             |> ofRows  
-          ) 
-          matrix 
+         ) 
+         matrix 
 
     let backward (matrix: matrix) =
       [matrix.NumRows - 1..-1..0]
-      |> Seq.fold
-          (fun (acc: matrix) ind ->
+      |> Seq.fold (fun (acc: matrix) ind ->
             let rows = rows acc
             let curRow = rows |> Seq.nth ind 
             
             let top = 
                 rows 
                 |> Seq.take ind
-                |> Seq.map
-                    (fun row ->
+                |> Seq.map (fun row ->
                       curRow * row.[ind]
                       |> (-) row
-                    )
+                   )
             
             let bottom = Seq.skip ind rows 
             
             Seq.append top bottom |> ofRows
-          )
-          matrix
+         )
+         matrix
 
     let addIdentity matrix =
       augment matrix <|

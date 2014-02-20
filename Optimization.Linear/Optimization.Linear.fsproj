@@ -65,9 +65,11 @@
     <None Include="App.config" />
     <TestAssemblies Include="**/*.tests.dll" />
     <None Include="packages.config" />
+    <Compile Include="ListPatterns.fs" />
     <Compile Include="EqualityPatterns.fs" />
     <Compile Include="Vector.fs" />
     <Compile Include="RowVector.fs" />
+    <Compile Include="List.fs" />
     <Compile Include="Matrix.fs" />
     <Compile Include="Simplex.fs" />
   </ItemGroup>

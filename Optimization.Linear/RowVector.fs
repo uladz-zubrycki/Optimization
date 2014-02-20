@@ -23,4 +23,8 @@ module RowVector = begin
   let div num row = 
     if num = 0.0 then invalidArg "num" "Can't divide by zero."
     row |> map (fun el -> el / num)
+
+  /// Transposition of current row-vector.
+  let transpose (row: rowvec) =
+    row.Transpose
 end
