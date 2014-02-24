@@ -1,5 +1,21 @@
 ﻿namespace Linear
 
+[<AutoOpen>]
+module VectorPatters = 
+   let (|BiggerOrEqual|_|) value vector =
+     vector 
+     |> Vector.forall ((<=) value)
+     |> function
+        | true -> Some()
+        | false -> None
+
+   let (|LessOrEqual|_|) value vector =
+     vector 
+     |> Vector.forall ((>=) value)
+     |> function
+        | true -> Some()
+        | false -> None
+
 /// Set of extensions for Microsoft.FSharp.Math.Vector module.
 [<RequireQualifiedAccess>]
 module Vector = begin
@@ -15,5 +31,14 @@ module Vector = begin
 
   /// Transposition of current vector.
   let transpose (vector: vector) = 
-    vector.Transpose 
+    vector.Transpose
+  
+  /// Appends sequence of items to targeting vector
+  let append items vector = 
+    vector
+    |> Seq.append items
+    |> Vector.ofSeq   
+
+ 
+          
 end

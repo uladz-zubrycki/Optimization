@@ -1,16 +1,22 @@
 ﻿namespace Linear
 
+[<AutoOpen>]
+module ListRecognizers = 
+  let (|In|_|) arg value = 
+    arg 
+    |> List.exists ((=) value) 
+    |> function
+       | true -> Some()
+       | false -> None
+
 /// Set of extensions for Microsoft.FSharp.Collections.List module
 module List = 
-  /// Set difference of two lists.
-  let difference second first =
-    [first; second]
-    |> List.map Set.ofList
-    |> fun list ->
-        let (f, s) = (list.[0], list.[1])
-        s 
-        |> Set.difference f
-        |> List.ofSeq  
+  /// Creates list without specified items.
+  let without items list =
+    let itemsSet = items |> Set.ofList 
+    
+    list 
+    |> List.filter (itemsSet.Contains >> not)
 
   /// Filters list using provided predicate
   /// Predicate takes element index and element

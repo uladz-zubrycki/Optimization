@@ -27,4 +27,24 @@ module RowVector = begin
   /// Transposition of current row-vector.
   let transpose (row: rowvec) =
     row.Transpose
+
+     /// Partitions vector to two according to predicate result
+  let partition predicate (row:rowvec) =
+    row
+    |> toList
+    |> List.partition predicate
+    |> function
+       | (fst, snd) -> (fst |> RowVector.ofList, snd |> RowVector.ofList)
+
+  /// Partitions vector to two according to predicate result
+  let partitioni predicate (row:rowvec) = 
+    let fromIndexedTuple tuple =
+       tuple |> List.map snd |> RowVector.ofList
+
+    row
+    |> toList
+    |> List.mapi (fun i item -> i, item)
+    |> List.partition (fun (i, item) -> predicate i item)
+    |> function
+       | (fst, snd) -> (fromIndexedTuple fst, fromIndexedTuple snd)
 end

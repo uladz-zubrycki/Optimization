@@ -2,7 +2,6 @@
 
 #if INTERACTIVE
 open Linear
-open Linear.EqualityPatterns
 #endif
 
 /// Set of extensions for Microsoft.FSharp.Math.Matrix module.

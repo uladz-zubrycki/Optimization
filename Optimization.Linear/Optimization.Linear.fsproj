@@ -65,8 +65,8 @@
     <None Include="App.config" />
     <TestAssemblies Include="**/*.tests.dll" />
     <None Include="packages.config" />
-    <Compile Include="ListPatterns.fs" />
-    <Compile Include="EqualityPatterns.fs" />
+    <Compile Include="EqualityRecognizers.fs" />
+    <Compile Include="Set.fs" />
     <Compile Include="Vector.fs" />
     <Compile Include="RowVector.fs" />
     <Compile Include="List.fs" />
@@ -79,6 +79,10 @@
     </Reference>
     <Reference Include="FSharp.PowerPack">
       <HintPath>..\packages\FSPowerPack.Core.Community.3.0.0.0\Lib\Net40\FSharp.PowerPack.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharpx.Core">
+      <HintPath>..\packages\FSharpx.Core.1.8.41\lib\40\FSharpx.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
