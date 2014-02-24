@@ -17,7 +17,7 @@ module List =
     
     list 
     |> List.filter (itemsSet.Contains >> not)
-
+ 
   /// Filters list using provided predicate
   /// Predicate takes element index and element
   let filteri (predicate: int -> 'a -> bool) (list: 'a list) =
