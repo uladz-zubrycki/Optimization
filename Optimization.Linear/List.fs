@@ -12,11 +12,11 @@ module ListRecognizers =
 /// Set of extensions for Microsoft.FSharp.Collections.List module
 module List = 
   /// Creates list without specified items.
-  let without items list =
-    let itemsSet = items |> Set.ofList 
-    
-    list 
-    |> List.filter (itemsSet.Contains >> not)
+  let without (items: 'a list) (list: 'a list) =
+    list
+    |> List.filter (fun i ->
+         not (items |> List.exists ((=) i))
+       )   
  
   /// Filters list using provided predicate
   /// Predicate takes element index and element
