@@ -1,14 +1,6 @@
-﻿#if INTERACTIVE
-#r @"bin\Debug\FSharp.PowerPack.dll"
-#load "EqualityRecognizers.fs" 
-#load "Set.fs"
-#load "Vector.fs" 
-#load "RowVector.fs"
-#load "List.fs"
-#load "Matrix.fs" 
-#endif
+﻿module Optimization
 
-open Linear
+open Optimization.Utils
 
 (*
   Simplex method for transportation theory task.

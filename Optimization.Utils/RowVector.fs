@@ -1,4 +1,4 @@
-﻿namespace Linear
+﻿namespace Optimization.Utils
 
 /// Set of extensions to module Microsoft.FSharp.Math.RowVector module.
 [<RequireQualifiedAccess>]
@@ -47,4 +47,20 @@ module RowVector = begin
     |> List.partition (fun (i, item) -> predicate i item)
     |> function
        | (fst, snd) -> (fromIndexedTuple fst, fromIndexedTuple snd)
+
+  /// Creates new rowvector from elements at specified indices.
+  let items indices rowvec =
+    indices
+    |> Seq.map (RowVector.get rowvec) 
+    |> RowVector.ofSeq
+
+  /// Creates vector of specified length, 
+  /// where all values equals 0, 
+  /// except value at k index, which equals 1
+  let E length k = 
+    RowVector.init k (fun i ->
+      match i with 
+      | Equals k -> 1.0
+      | _ -> 0.0
+    ) 
 end

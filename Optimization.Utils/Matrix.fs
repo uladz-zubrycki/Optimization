@@ -1,12 +1,8 @@
-﻿namespace Linear
-
-#if INTERACTIVE
-open Linear
-#endif
+﻿namespace Optimization.Utils
 
 /// Set of extensions for Microsoft.FSharp.Math.Matrix module.
 [<RequireQualifiedAccess>]
-module Matrix = begin
+module Matrix =
   /// Create matrix using sequence of rows.
   let ofRows (rows: rowvec seq) = 
     rows |> Matrix.ofSeq
@@ -173,4 +169,4 @@ module Matrix = begin
     |> forward
     |> backward
     |> fromColumns [dim..dim * 2 - 1]
-end
+

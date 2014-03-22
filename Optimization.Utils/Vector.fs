@@ -1,20 +1,4 @@
-﻿namespace Linear
-
-[<AutoOpen>]
-module VectorPatters = 
-   let (|BiggerOrEqual|_|) value vector =
-     vector 
-     |> Vector.forall ((<=) value)
-     |> function
-        | true -> Some()
-        | false -> None
-
-   let (|LessOrEqual|_|) value vector =
-     vector 
-     |> Vector.forall ((>=) value)
-     |> function
-        | true -> Some()
-        | false -> None
+﻿namespace Optimization.Utils
 
 /// Set of extensions for Microsoft.FSharp.Math.Vector module.
 [<RequireQualifiedAccess>]
@@ -40,5 +24,4 @@ module Vector = begin
     |> Vector.ofSeq   
 
  
-          
 end
