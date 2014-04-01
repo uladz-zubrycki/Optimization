@@ -107,7 +107,7 @@ module Matrix =
          | None -> failwith "Determinant is zero, cause matrix contains zero column"
          | Some(foundInd) when foundInd = 0 -> matrix
          | Some(foundInd) -> 
-             matrix |> exchangeRows ind foundInd
+             matrix |> exchangeRows ind (foundInd + ind)
     
     let forward (matrix: matrix) = 
       [0..matrix.NumRows - 1]

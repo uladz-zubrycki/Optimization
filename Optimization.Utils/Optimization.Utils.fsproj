@@ -63,6 +63,7 @@
     <Compile Include="Vector.fs" />
     <Compile Include="RowVector.fs" />
     <Compile Include="Matrix.fs" />
+    <Compile Include="Tuple.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>

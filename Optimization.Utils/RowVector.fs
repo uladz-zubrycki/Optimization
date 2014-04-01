@@ -58,9 +58,16 @@ module RowVector = begin
   /// where all values equals 0, 
   /// except value at k index, which equals 1
   let E length k = 
-    RowVector.init k (fun i ->
+    RowVector.init length (fun i ->
       match i with 
       | Equals k -> 1.0
       | _ -> 0.0
     ) 
+
+  /// RowVector dot product
+  let dot (row1: rowvec) (row2: rowvec) =
+    Seq.map2 (fun fst snd -> 
+      fst * snd
+    ) row1 row2
+    |> Seq.sum
 end
