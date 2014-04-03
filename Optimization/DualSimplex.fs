@@ -8,6 +8,35 @@ namespace Optimization
 
 open Optimization.Utils
 
+[<AutoOpen>]
+module Operators = begin
+  let precision = pown 0.1 3
+  
+  let equalPrec precision x y = abs(x - y) < precision 
+  let equal = equalPrec precision 
+  let notEqual x y = not (equal x y)    
+  
+  let cond op x y = op x y && notEqual x y
+  let condOrEqual op x y = op x y || equal x y
+  let bigger = cond (>)
+  let biggerOrEqual = condOrEqual (>)
+  let less = cond (<)
+  let lessOrEqual = condOrEqual (<)
+  
+  let opSeq op (fst: float seq) (snd: float seq) = 
+   (fst, snd) 
+   ||> Seq.map2 (fun x y -> 
+          (x, y) ||> op
+       )
+   |> Seq.forall id
+
+  let equalSeq fst snd = (fst, snd) ||> opSeq equal
+  let biggerSeq fst snd = (fst, snd) ||> opSeq bigger
+  let biggerOrEqualSeq fst snd = (fst, snd) ||> opSeq biggerOrEqual
+  let lessSeq fst snd = (fst, snd) ||> opSeq less
+  let lessOrEqualSeq fst snd = (fst, snd) ||> opSeq lessOrEqual
+end
+
 (*
     Transportation theory task.
       n: int - count of product types
@@ -33,7 +62,7 @@ module DualSimplex = begin
       let A'b = A |> Matrix.sliceCols J'b
       
       try 
-        Matrix.inv A |> ignore
+        Matrix.inv A'b |> ignore
         true
       with
       | _ -> false
@@ -42,7 +71,7 @@ module DualSimplex = begin
       let min = List.min >> ((+) 1) <| cur  
       let max = min + m
       
-      [min..max]
+      [min..max - 1]
     
     let rec updateJ'b cur = 
       if List.max >> ((<) n) <| cur then
@@ -56,7 +85,7 @@ module DualSimplex = begin
         |> nextJ'b 
         |> updateJ'b
       
-    updateJ'b [0..m]
+    updateJ'b [0..m - 1]
 
   let dualSimplex (A:matrix, b: vector, c, d, J) =
     let (d'down: float list, d'up: float list) = d
@@ -81,7 +110,7 @@ module DualSimplex = begin
     let ``J'n+``, ``J'n-`` = 
       J'n |> List.partition (fun j -> 
                let delta'j = delta.[j]
-               delta'j >= 0.0
+               biggerOrEqual delta'j 0.0
              )
     
     let rec dualSimplexImpl (delta: float list, J'b, ``J'n+``, ``J'n-``) =
@@ -116,6 +145,7 @@ module DualSimplex = begin
              match j with
              | In J'b -> x'b |> getByIndices J'b j
              | In J'n -> x'n |> getByIndices J'n j
+             | _ -> failwith "No more indices expected"
            )
         |> RowVector.ofSeq
 
@@ -126,8 +156,8 @@ module DualSimplex = begin
                let x'j = x.[j] 
                let min = d'down.[j]
                let max = d'up.[j]
-               let satisfiesDown = min <= x'j
-               let satisfiesUp = x'j <= max
+               let satisfiesDown = lessOrEqual min x'j
+               let satisfiesUp = biggerOrEqual max x'j
     
                let satisfies = satisfiesDown && satisfiesUp
                let m'j = if satisfies then 0.0
