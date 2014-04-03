@@ -23,7 +23,7 @@ module EqualityRecognizers = begin
     |> function
        | true -> Some()
        | false -> None
-
+  
   let (|LessOrEqual|_|) value vector =
     vector 
     |> Vector.forall ((>=) value)

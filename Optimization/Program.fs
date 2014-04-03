@@ -15,9 +15,8 @@ let task1 () =
            [2.0;  4.0; 4.0; 3.0;  3.0; 5.0])
   
   let J = [0..5]
-  let J'b = [3..5]
   
-  let plan = dualSimplex (A, b, c, d, J, J'b)
+  let plan = dualSimplex (A, b, c, d, J)
   match plan with
   | Some(x) -> 
       let xx = rowvec [1.5; 1.0; 2.0; 1.5; -1.0; 0.0]
@@ -41,9 +40,8 @@ let task2 ()=
            [3.0;  3.0; 6.0; 2.0;  4.0; 6.0])
   
   let J = [0..5]
-  let J'b = [0..2]
   
-  let plan = dualSimplex (A, b, c, d, J, J'b)
+  let plan = dualSimplex (A, b, c, d, J)
   match plan with
   | Some(x) -> 
       let profit = RowVector.dot c x
@@ -71,9 +69,8 @@ let task3 ()=
            [3.0; 5.0; 5.0; 1.0; 4.0; 5.0; 6.0; 3.0])
   
   let J = [0..5]
-  let J'b = [0..2]
   
-  let plan = dualSimplex (A, b, c, d, J, J'b)
+  let plan = dualSimplex (A, b, c, d, J)
   match plan with
   | Some(x) -> 
       let profit = RowVector.dot c x
@@ -87,5 +84,5 @@ let task3 ()=
   | None ->
     ()
 
-task2 ()
+task1 ()
 

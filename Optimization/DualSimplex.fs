@@ -26,11 +26,44 @@ open Optimization.Utils
 *)
 [<AutoOpen>]
 module DualSimplex = begin
-  let dualSimplex (A:matrix, b: vector, c, d, J, J'b) =
+  let private initJ'b (A:matrix) =
+    let m, n = A.NumRows, A.NumCols
+
+    let checkJ'b (J'b: int list) =
+      let A'b = A |> Matrix.sliceCols J'b
+      
+      try 
+        Matrix.inv A |> ignore
+        true
+      with
+      | _ -> false
+
+    let nextJ'b cur =
+      let min = List.min >> ((+) 1) <| cur  
+      let max = min + m
+      
+      [min..max]
+    
+    let rec updateJ'b cur = 
+      if List.max >> ((<) n) <| cur then
+        failwith "Can't create initial basis" 
+      else
+
+      if checkJ'b cur then
+        cur
+      else
+        cur 
+        |> nextJ'b 
+        |> updateJ'b
+      
+    updateJ'b [0..m]
+
+  let dualSimplex (A:matrix, b: vector, c, d, J) =
     let (d'down: float list, d'up: float list) = d
     let m, n = A.NumRows, A.NumCols
+    let J'b = initJ'b A
     let J'n = J |> List.without J'b
-    let A'b = A |> Matrix.fromColumns J'b
+    let A'b = A |> Matrix.sliceCols J'b
     let B = A'b |> Matrix.inv
     let c'b = c |> RowVector.items J'b
     
@@ -50,10 +83,10 @@ module DualSimplex = begin
                let delta'j = delta.[j]
                delta'j >= 0.0
              )
-  
+    
     let rec dualSimplexImpl (delta: float list, J'b, ``J'n+``, ``J'n-``) =
       let J'n = J |> List.without J'b
-      let A'b = A |> Matrix.fromColumns J'b
+      let A'b = A |> Matrix.sliceCols J'b
       let B = A'b |> Matrix.inv
 
       let getX () =

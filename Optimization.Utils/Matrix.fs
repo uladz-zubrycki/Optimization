@@ -22,13 +22,13 @@ module Matrix =
     matrix.NumRows
 
   /// Create new matrix using columns at specified indices. 
-  let fromColumns indices (matrix: matrix) =
+  let sliceCols indices (matrix: matrix) =
     indices 
     |> List.map (matrix.Column) 
     |> ofColumns
 
   /// Create new matrix using rows at specified indices.
-  let fromRows indices (matrix: matrix) =
+  let sliceRows indices (matrix: matrix) =
     indices 
     |> List.map (matrix.Row) 
     |> ofRows
@@ -117,10 +117,10 @@ module Matrix =
               |> removeZero ind
               |> rows
 
-            let curRow = Seq.nth ind rows
-            let curRow = RowVector.div curRow.[ind] curRow
+            let curRow = rows |> Seq.nth ind 
+            let curRow = curRow |> RowVector.div curRow.[ind] 
 
-            let top = rows |> Seq.take (ind)
+            let top = rows |> Seq.take ind
             let bottom = 
               rows
               |> Seq.skip (ind + 1)
@@ -139,7 +139,7 @@ module Matrix =
     let backward (matrix: matrix) =
       [matrix.NumRows - 1..-1..0]
       |> Seq.fold (fun (acc: matrix) ind ->
-            let rows = rows acc
+            let rows = acc |> rows 
             let curRow = rows |> Seq.nth ind 
             
             let top = 
@@ -168,5 +168,5 @@ module Matrix =
     |> addIdentity
     |> forward
     |> backward
-    |> fromColumns [dim..dim * 2 - 1]
+    |> sliceCols [dim..dim * 2 - 1]
 
