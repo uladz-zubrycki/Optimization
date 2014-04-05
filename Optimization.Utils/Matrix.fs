@@ -59,8 +59,8 @@ module Matrix =
       matrix
     else
       let getRow = function
-      | Equals first -> matrix.Row second
-      | Equals second -> matrix.Row first
+      | Equal first -> matrix.Row second
+      | Equal second -> matrix.Row first
       | x -> matrix.Row x
 
       [0..matrix.NumRows - 1]

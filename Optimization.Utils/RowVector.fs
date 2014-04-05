@@ -60,14 +60,13 @@ module RowVector = begin
   let E length k = 
     RowVector.init length (fun i ->
       match i with 
-      | Equals k -> 1.0
+      | Equal k -> 1.0
       | _ -> 0.0
     ) 
 
   /// RowVector dot product
   let dot (row1: rowvec) (row2: rowvec) =
-    Seq.map2 (fun fst snd -> 
-      fst * snd
-    ) row1 row2
+    (row1, row2)
+    ||> Seq.map2 (*)
     |> Seq.sum
 end

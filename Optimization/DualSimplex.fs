@@ -8,35 +8,6 @@ namespace Optimization
 
 open Optimization.Utils
 
-[<AutoOpen>]
-module Operators = begin
-  let precision = pown 0.1 3
-  
-  let equalPrec precision x y = abs(x - y) < precision 
-  let equal = equalPrec precision 
-  let notEqual x y = not (equal x y)    
-  
-  let cond op x y = op x y && notEqual x y
-  let condOrEqual op x y = op x y || equal x y
-  let bigger = cond (>)
-  let biggerOrEqual = condOrEqual (>)
-  let less = cond (<)
-  let lessOrEqual = condOrEqual (<)
-  
-  let opSeq op (fst: float seq) (snd: float seq) = 
-   (fst, snd) 
-   ||> Seq.map2 (fun x y -> 
-          (x, y) ||> op
-       )
-   |> Seq.forall id
-
-  let equalSeq fst snd = (fst, snd) ||> opSeq equal
-  let biggerSeq fst snd = (fst, snd) ||> opSeq bigger
-  let biggerOrEqualSeq fst snd = (fst, snd) ||> opSeq biggerOrEqual
-  let lessSeq fst snd = (fst, snd) ||> opSeq less
-  let lessOrEqualSeq fst snd = (fst, snd) ||> opSeq lessOrEqual
-end
-
 (*
     Transportation theory task.
       n: int - count of product types
@@ -123,12 +94,13 @@ module DualSimplex = begin
           indices |> Seq.findIndex ((=) index)
                   |> (fun i -> Seq.nth i items )
 
-        let x'n = J'n |> List.map (fun j ->
-                           match j with
-                           | In ``J'n+`` -> d'down.[j]
-                           | In ``J'n-`` -> d'up.[j]
-                           | _ -> failwith "No more indices expected."
-                         )    
+        let x'n = J'n 
+                  |> List.map (fun j ->
+                       match j with
+                       | InSeq ``J'n+`` -> d'down.[j]
+                       | InSeq ``J'n-`` -> d'up.[j]
+                       | _ -> failwith "No more indices expected."
+                     )    
   
         let x'b = J'n
                   |> Seq.map (fun j ->
@@ -143,8 +115,8 @@ module DualSimplex = begin
         J 
         |> Seq.map (fun j ->
              match j with
-             | In J'b -> x'b |> getByIndices J'b j
-             | In J'n -> x'n |> getByIndices J'n j
+             | InSeq J'b -> x'b |> getByIndices J'b j
+             | InSeq J'n -> x'n |> getByIndices J'n j
              | _ -> failwith "No more indices expected"
            )
         |> RowVector.ofSeq
@@ -183,7 +155,7 @@ module DualSimplex = begin
     
           let M = J |> List.map (fun j -> 
                          match j with
-                         | In J'b -> 0.0
+                         | InSeq J'b -> 0.0
                          | _ ->
                              let A'j = A.Column j
                              delta'y * A'j
@@ -193,8 +165,8 @@ module DualSimplex = begin
             J'n |> Seq.map (fun j -> 
                      let m'j = M.[j]
                      match (j, m'j) with
-                       | (In ``J'n+``, Less 0.0) 
-                       | (In ``J'n-``, Bigger 0.0) -> 
+                       | (InSeq ``J'n+``, Less 0.0) 
+                       | (InSeq ``J'n-``, Bigger 0.0) -> 
                           let delta'j = delta.[j]
                           j, -delta'j / m'j
                        | _ -> j, infinity
@@ -203,39 +175,34 @@ module DualSimplex = begin
           let (j'0, step'0) = steps |> Seq.minBy snd
     
           match step'0 with
-          | Equals infinity -> None // no plans
+          | Equal infinity -> None // no plans
           | _ -> 
-            let newDelta = J 
-                           |> Seq.map (fun j -> 
-                                match j with
-                                | In J'n | Equals j'k -> 
-                                    let delta'j = delta.[j]
-                                    let m'j = M.[j]
-                                    delta'j + step'0 * m'j
-                                | In J'b -> 0.0
-                                | _ -> failwith "No more indices expected"
-                              )
-                          |> List.ofSeq
+            let newDelta = 
+              J 
+              |> Seq.map (fun j -> 
+                   match j with
+                   | InSeq J'n | Equal j'k -> 
+                       let delta'j = delta.[j]
+                       let m'j = M.[j]
+                       delta'j + step'0 * m'j
+                   | InSeq J'b -> 0.0
+                   | _ -> failwith "No more indices expected"
+                 )
+              |> List.ofSeq
            
             let newJ'b = J'b |> List.replace j'k j'0 
             let newJ'n = J |> List.without newJ'b
-            let ``newJ'n+`` = match (m'jk, j'0) with
-                              | ( 1.0, In ``J'n+``) -> ``J'n+`` |> List.replace j'0 j'k
-                              | (-1.0, In ``J'n+``) -> ``J'n+`` |> List.without [j'0]
-                              | ( 1.0, NotIn ``J'n+``) -> j'k :: ``J'n+`` 
-                              | (-1.0, NotIn ``J'n+``) -> ``J'n+``
-                              | _ -> failwith "No more variats expected."
+            let ``newJ'n+`` = 
+              match (m'jk, j'0) with
+              | ( 1.0, InSeq ``J'n+``) -> ``J'n+`` |> List.replace j'0 j'k
+              | (-1.0, InSeq ``J'n+``) -> ``J'n+`` |> List.without [j'0]
+              | ( 1.0, NotInSeq ``J'n+``) -> j'k :: ``J'n+`` 
+              | (-1.0, NotInSeq ``J'n+``) -> ``J'n+``
+              | _ -> failwith "No more varinats expected."
     
             let ``newJ'n-`` = newJ'n |> List.without ``newJ'n+``
             
             dualSimplexImpl (newDelta, newJ'b, ``newJ'n+``, ``newJ'n-``)
         
     dualSimplexImpl (delta, J'b, ``J'n+``, ``J'n-``)
- end 
- 
-  
-  
-                  
-    
-  
-  
+ end

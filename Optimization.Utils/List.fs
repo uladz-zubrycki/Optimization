@@ -1,22 +1,5 @@
 ﻿namespace Optimization.Utils
 
-[<AutoOpen>]
-module ListRecognizers = begin
-  let (|In|_|) arg value = 
-    arg 
-    |> List.exists ((=) value) 
-    |> function
-       | true -> Some()
-       | false -> None
-
-  let (|NotIn|_|) arg value = 
-    arg 
-    |> List.exists ((=) value) 
-    |> function
-       | true -> None
-       | false -> Some()
-end
-
 /// Set of extensions for Microsoft.FSharp.Collections.List module
 module List = begin
   /// Creates list without specified items.
@@ -38,7 +21,15 @@ module List = begin
   let replace target value list =
     list |> List.map(fun i ->
               match i with
-              | Equals target -> value
+              | Equal target -> value
               | _ -> i
             )
+
+  /// Set value at specified index
+  let set index value list = 
+    list |> List.mapi (fun i x -> 
+              if i = index then value
+              else x
+            )
+
 end

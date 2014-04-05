@@ -60,6 +60,7 @@
     <None Include="App.config" />
     <None Include="packages.config" />
     <Compile Include="DualSimplex.fs" />
+    <Compile Include="Branches%27nBounds.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
