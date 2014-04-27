@@ -58,12 +58,6 @@
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
   </Target>
   <ItemGroup>
-    <Compile Include="Tuple.fs" />
-    <Compile Include="Operators.fs" />
-    <Compile Include="Recognizers.fs" />
-    <Compile Include="List.fs" />
-    <Compile Include="Vector.fs" />
-    <Compile Include="RowVector.fs" />
     <Compile Include="Matrix.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />

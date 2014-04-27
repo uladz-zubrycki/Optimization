@@ -1,89 +1,89 @@
-﻿namespace Optimization
+﻿module Optimization.BranchesAndBounds
+open Optimization.DualSimplex
 
-open Optimization.Utils
+#nowarn "0049"
 
-[<AutoOpen>]
-module BranchesAndBounds = begin
-  [<AutoOpen>]
-  module private Utils = begin
-    type task = matrix *                      // A
-                vector *                      // b
-                rowvec *                      // c
-                (float list * float list) *   // d'up * d'down
-                int list *                    // J
-                int list                      // I
+type private indices = int list
 
-    let isInt x = equal x (round x)
-    let isIntSeq = Seq.forall isInt
-  
-    let (|AllInt|_|) x = 
-      if isIntSeq x then Some ()
-      else None
-  end
-  
-  let private solveTask task = 
-    let A, b, c, d, J, _ = task
-    dualSimplex (A, b, c, d, J)
+type private restrictions = 
+  { down: float list; 
+    up: float list }         
 
-  let private splitTask index value task =
-    let A, b, c, (d'down, d'up), J, I = task
-    
-    let int = floor value
-    let d1 = (d'down |> List.set index (int + 1.0), d'up)
-    let d2 = (d'down, d'up |> List.set index int)  
-    let task1 = A, b, c, d1, J, I
-    let task2 = A, b, c, d2, J, I
-    
-    [task1; task2] 
+type private task = 
+  { A: matrix;
+    b: vector;
+    c: rowvec;
+    d: restrictions;
+    I: indices }
 
-  let branchesAndBounds (task:task) =
-    let A, b, c, d, J, I = task
-    let m, n = A.NumRows, A.NumCols
-    let profit = RowVector.dot c 
+type private tasks = task list
+type private plan = rowvec * float    // plan and profit
 
-    let updateCtx ctx plan =
-      let (tasks, r'0, m'0, M) = ctx
-      let cur::other = tasks
+type private solution = 
+  | Found of plan
+  | NotFound
 
-      match (profit plan, plan) with
-      | Lessf r'0, _ -> (other, r'0, m'0, M)
-      | profit, AllInt -> (other, profit, 1, plan)
-      | _, _ ->
-        let (j'0, xj'0) = 
-          I
-          |> Seq.map (fun j -> (j, plan.[j]))
-          |> Seq.find (not << isInt << snd)
+type private iterCtx = tasks *        // unsolved tasks
+                       solution       // best solution
 
-        let newTasks = 
-          cur
-          |> splitTask j'0 xj'0
-          |> (@) other
-      
-        (newTasks, r'0, m'0, M)
+let private solveTask task = 
+  let { A = A; b = b; c = c; d = d } = task
+  let { down = down; up = up } = d
+  let profit = RowVector.dot c 
 
-    let rec branchesAndBoundsImpl ctx = 
-      let tasks, r'0, m'0, M = ctx 
+  dualSimplex (A, b, c, (down, up))
+  |> Option.map (fun (_, x) -> (x, profit x))
 
-      match (tasks, m'0) with
-      | [], 0 -> None
-      | [], 1 -> Some(M)  
-      | cur :: other, _ ->
-      
-        cur
-        |> solveTask
-        |> function
-           | None -> (other, r'0, m'0, M)
-           | Some(plan) -> updateCtx ctx plan
-        |> branchesAndBoundsImpl
-      | _ -> failwith "Not expected"
+let private splitTask i x task =
+  let { d = d } = task
+  let { up = up; down = down } = d
 
-    match I with
-    | [] -> solveTask task
-    | _ ->   
-      let r'0 = -infinity
-      let m'0 = 0
-      let M = RowVector.zero n
-      let tasks = [task]
-       
-      (tasks, r'0, m'0, M) |> branchesAndBoundsImpl 
-end
+  let int = floor x
+  let down' = List.set i (int + 1.0) down
+  let up' = List.set i int up  
+  let d1, d2 = { d with down = down' }, { d with up = up' }
+
+  { task with d = d1 } :: {task with d = d2} :: []
+
+let private branchesAndBoundsImpl task =
+  let {A = A; b = b; c = c; d = d; I = I} = task 
+  let m, n = A.NumRows, A.NumCols
+  let isInt value = equal value (round value)
+  let isSolution = RowVector.items I >> Seq.forall isInt
+   
+  let rec loop (ctx: iterCtx) = 
+    match ctx with
+    | [], NotFound -> None
+    | [], Found(x, _) -> Some(x)  
+    | (cur :: other, best) -> 
+        match best, solveTask cur with
+        | NotFound, Some (x, profit) 
+          when isSolution x -> 
+            (other, Found(x, profit))
+        | Found (_, bestProfit), Some (_, profit) 
+          when profit <= bestProfit -> 
+            (other, best)
+        | Found (_, bestProfit), Some (x, profit) 
+          when isSolution x -> 
+            (other, Found(x, profit))
+        | _, Some (x, profit) ->
+            let (j'0, xj'0) = 
+              I
+              |> Seq.map (fun j -> (j, x.[j]))
+              |> Seq.find (not << isInt << snd)
+            
+            let tasks' = 
+              cur
+              |> splitTask j'0 xj'0
+              |> (@) other
+            
+            (tasks', best)
+        | _, None -> (other, best)
+        |> loop 
+
+  ([task], NotFound) |> loop 
+
+let branchesAndBounds (A, b, c, d, I) =
+  let d = { down = fst d; up = snd d }
+  let task = { A = A; b = b; c = c; d = d; I = I }
+  branchesAndBoundsImpl task
