@@ -52,22 +52,6 @@
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
-    <Reference Include="RDotNet">
-      <HintPath>..\packages\R.NET.1.5.5\lib\net40\RDotNet.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="RDotNet.FSharp">
-      <HintPath>..\packages\RDotNet.FSharp.0.1.2.1\lib\net40\RDotNet.FSharp.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="RDotNet.NativeLibrary">
-      <HintPath>..\packages\R.NET.1.5.5\lib\net40\RDotNet.NativeLibrary.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="RProvider">
-      <HintPath>..\packages\RProvider.1.0.5\lib\RProvider.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
@@ -76,10 +60,10 @@
   <ItemGroup>
     <Compile Include="Common.fs" />
     <Compile Include="DualSimplex.fs" />
+    <Compile Include="Bellman.fs" />
     <Compile Include="Branches%27nBounds.fs" />
-    <Compile Include="Gomory.fs" />
     <Compile Include="Branches%27nBounds_Tests.fs" />
-    <Compile Include="Gomory_Tests.fs" />
+    <Compile Include="Bellman_Tests.fs" />
     <None Include="packages.config" />
     <None Include="App.config" />
   </ItemGroup>

@@ -104,11 +104,7 @@ let private updateTask (plan: plan) task =
     |> Seq.map (fun j -> j, x.[j]) 
     |> Seq.find (not << isInt << snd)
   
-  let y = 
-    Jb
-    |> List.findIndex ((=) i'0)
-    |> RowVector.E m
-    |> (fun E -> E * B)
+  let y = RowVector.E m i'0 * B
 
   let Au, beta = 
     (y * B * A, y * b) 
