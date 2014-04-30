@@ -259,33 +259,32 @@ let test data =
     if not (result |> equalSeq expected) then false
     else true
 
-let performTests = 
-  let cases = [case0;
-     case1;
-     case2;
-     case3;
-     case4;
-     case5;
-     case6;
-     case7;
-     case8;
-     case9;
-     case10;]
+let cases = [case0;
+   case1;
+   case2;
+   case3;
+   case4;
+   case5;
+   case6;
+   case7;
+   case8;
+   case9;
+   case10;]
 
-  let results =
-    cases
-    |> Seq.map ((|>) ())
-    |> Seq.mapi (fun i (task, expected) -> (i, task, expected))
-    |> Seq.map test
+let results =
+  cases
+  |> Seq.map ((|>) ())
+  |> Seq.mapi (fun i (task, expected) -> (i, task, expected))
+  |> Seq.map test
 
-  let succeed = results |> Seq.forall id
+let succeed = results |> Seq.forall id
 
-  if not succeed then
-    let fails = 
-      results
-      |> Seq.mapi (fun i res -> i, res) 
-      |> Seq.filter (id << not << snd)
-      |> Seq.map fst 
-      |> Seq.fold (fun st i -> sprintf "%s №%d," st i) ""
+if not succeed then
+  let fails = 
+    results
+    |> Seq.mapi (fun i res -> i, res) 
+    |> Seq.filter (id << not << snd)
+    |> Seq.map fst 
+    |> Seq.fold (fun st i -> sprintf "%s №%d," st i) ""
 
-    failwith <| sprintf "Tests %s failed" fails
+  failwith <| sprintf "Tests %s failed" fails

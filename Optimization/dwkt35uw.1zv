@@ -3,9 +3,6 @@
 [<AutoOpen>]
 module Tuple = begin
   let snd3 (x, y, z) = y
-  
-  let map f (fst, snd) =
-    (f fst, f snd)
 end
 
 [<AutoOpen>]

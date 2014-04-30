@@ -7,14 +7,13 @@ open RProvider.``base``
 open RProvider.RDotNetExtensions
 
 type private indices = int list
-type private task = matrix  *                 // A
-                    vector  *                 // b
-                    rowvec  *                 // c
-                    indices *                 // J
-                    indices                   // I
+type private plan = indices * rowvec  // basis indices and plan
 
-type private plan = indices *                 // Jb
-                    rowvec                    // x
+type private task = 
+  { A: matrix;
+    b: vector;
+    c: rowvec;
+    I: indices }
 
 let private isInt x = equal x (round x)
 
@@ -30,51 +29,89 @@ let private solve task =
     |> Array.map (Array.ofSeq >> box) 
     |> rbind 
  
-  let A, b, c, _, _ = task
-  let cvec = rvector c 
-  let bvec = rvector b 
-  let Amat = rmatrix A
-  let const_dir = Array.create bvec.Length "=="
+  let { A = A; b = b; c = c; } = task
+  let m, n = A.NumRows, A.NumRows
 
   let res = 
     namedParams [
-      "cvec", box cvec;
-      "bvec", box bvec;
-      "Amat", box Amat;
-      "lpSolve", box true;
-      "maximum", box true;
-      "const.dir", box const_dir]
+      "cvec", box <| rvector c ;
+      "bvec", box <| rvector b;
+      "Amat", box <| rmatrix A;
+      "lpSolve", box <| true;
+      "maximum", box <| true;
+      "const.dir", box <| Array.create m "==" ]
     |> R.solveLP
+
+  let getJb plan = 
+    let isJb J =
+      try
+        A 
+        |> Matrix.sliceCols J
+        |> Matrix.inv 
+        |> ignore
+        true
+      with
+      | _ -> false 
+    
+    let rec brutJb cur rest length =
+      if Seq.length cur = length then
+        if isJb cur then Seq.singleton cur
+        else Seq.empty
+      else
+        seq { 
+          for i in 0.. Seq.length rest - 1 do 
+            let ind = rest |> Seq.nth i 
+            let rest' = 
+              rest 
+              |> Seq.take i
+              |> List.ofSeq
+
+            yield! brutJb (ind::cur) rest' length
+        }
+
+    let zeroInd, nonZeroInd = 
+     plan
+     |> List.ofSeq
+     |> List.mapi (fun i el -> i, el)
+     |> List.partition (snd >> ((=) 0.0))
+     |> Tuple.map (List.map fst)
+
+    brutJb nonZeroInd zeroInd m
+    |> Seq.head  
 
   try
     let x = 
       res.AsList().["solution"].AsNumeric()
       |> RowVector.ofSeq
 
-    Some ([], x)
+    Some (getJb x, x) 
   with 
   | _ -> None
 
-let private updateTask (plan: plan) (task: task) = 
-  let A, b, c, J, I = task
+let private updateTask (plan: plan) task = 
+  let { A = A; b = b; c = c; I = I } = task
   let m, n = A.NumRows, A.NumCols
-  let Jb, x  = plan
-  let Ab = A |> Matrix.sliceCols Jb
-  let B = Matrix.inv Ab
+  let J = [0..n - 1]
+  let Jb, x = plan
+  let B = 
+    A
+    |> Matrix.sliceCols Jb
+    |> Matrix.inv 
 
   let i'0, xi'0 = 
     Jb 
-    |> Seq.filter (fun j -> Seq.exists ((=) j) I)
+    |> Seq.filter (fun j -> I |> Seq.exists ((=) j))
     |> Seq.map (fun j -> j, x.[j]) 
     |> Seq.find (not << isInt << snd)
   
   let y = 
-    List.findIndex ((=) i'0) Jb
+    Jb
+    |> List.findIndex ((=) i'0)
     |> RowVector.E m
     |> (fun E -> E * B)
 
   let Au, beta = 
-    (y * A, y * b) 
+    (y * B * A, y * b) 
     |> fun (fst, snd) -> 
          let getFract x = floor x - x
          let getRowFract = RowVector.map getFract
@@ -88,20 +125,22 @@ let private updateTask (plan: plan) (task: task) =
 
   let b' = b |> Vector.append [beta]
   let c' = c |> RowVector.append [0.0]
-  let J' = J @ [n' - 1]
-  let I' = I @ [n' - 1]
 
-  (A', b', c', J', I')
+  { A = A'; b = b'; c = c'; I = I }
 
-let rec gomory (task: task) = 
-  let A, b, c, J, I = task 
+let rec private gomoryImpl task =
+  let { A = A; b = b; c = c; I = I } = task 
   let plan = solve task
   let isSolution = RowVector.items I >> Seq.forall isInt
 
   match plan with
   | None -> None
-  | Some (_, x) when isSolution x -> Some(x)  
+  | Some (_, x) when isSolution x -> Some (x)  
   | Some plan -> 
       task
       |> updateTask plan 
-      |> gomory
+      |> gomoryImpl
+
+let gomory (A, b, c, I) = 
+  let task = { A = A; b = b; c = c; I = I}
+  gomoryImpl task

@@ -182,7 +182,7 @@ let case9 () =
   ((A, b, c, I), expected)
 
 let test data = 
-  let (task, expected) = data
+  let (i, task, expected) = data
   let result = task |> gomory
 
   match expected, result with
@@ -207,12 +207,14 @@ let cases =
 
 let results =
   cases
+  |> Seq.mapi (fun i test -> 
+                fun () ->  
+                  printfn "Test №%d started" (i + 1)
+                  test ()
+              )
   |> Seq.map ((|>) ())
-  |> Seq.map (fun data ->
-       printfn "Test started"
-       test data
-     )
-  |> Seq.toList
+  |> Seq.mapi (fun i (task, expected) -> (i, task, expected))
+  |> Seq.map test
 
 let succeed = results |> Seq.forall id
 
