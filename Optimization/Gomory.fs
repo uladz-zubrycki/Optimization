@@ -7,7 +7,7 @@ open RProvider.``base``
 open RProvider.RDotNetExtensions
 
 type private indices = int list
-type private plan = indices * rowvec  // basis indices and plan
+type private plan = indices * rowvec  
 
 type private task = 
   { A: matrix;
@@ -91,12 +91,9 @@ let private solve task =
 let private updateTask (plan: plan) task = 
   let { A = A; b = b; c = c; I = I } = task
   let m, n = A.NumRows, A.NumCols
-  let J = [0..n - 1]
-  let Jb, x = plan
-  let B = 
-    A
-    |> Matrix.sliceCols Jb
-    |> Matrix.inv 
+  let J, (Jb, x) = [0..n - 1], plan
+  let A'b = A |> Matrix.sliceCols Jb
+  let B = Matrix.inv A'b 
 
   let i'0, xi'0 = 
     Jb 
@@ -104,10 +101,10 @@ let private updateTask (plan: plan) task =
     |> Seq.map (fun j -> j, x.[j]) 
     |> Seq.find (not << isInt << snd)
   
-  let y = RowVector.E m i'0 * B
+  let y = B.Row i'0
 
   let Au, beta = 
-    (y * B * A, y * b) 
+    (y * A, y * b) 
     |> fun (fst, snd) -> 
          let getFract x = floor x - x
          let getRowFract = RowVector.map getFract

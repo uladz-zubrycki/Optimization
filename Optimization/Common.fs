@@ -59,16 +59,13 @@ module Recognizers = begin
     |> matchBool
 end
 
-/// Set of extensions for Microsoft.FSharp.Collections.List module
 module List = begin
-  /// Creates list without specified items.
   let without (items: 'a list) (list: 'a list) =
     list
     |> List.filter (fun i ->
          not (items |> List.exists ((=) i))
        )   
 
-  /// Replaces all occurences of target with value in list
   let replace target value list =
     list 
     |> List.map(fun i -> 
@@ -76,7 +73,6 @@ module List = begin
          else i
        )
 
-  /// Set value at specified index
   let set index value list = 
     list 
     |> List.mapi (fun i x -> 
@@ -85,7 +81,6 @@ module List = begin
        )
 end
 
-/// Set of extensions for Microsoft.FSharp.Math.Vector module.
 [<RequireQualifiedAccess>]
 module Vector = begin
   let concat (fst: vector) (snd: vector) = 
@@ -93,23 +88,17 @@ module Vector = begin
     |> Seq.concat 
     |> Vector.ofSeq
   
-  /// Creates new vector from elements at specified indices.
   let items indices vector =
     indices
     |> Seq.map (Vector.get vector) 
     |> Vector.ofSeq
 
-  /// Transposition of current vector.
   let transpose (vector: vector) = vector.Transpose
   
-  /// Appends sequence of items to vector
   let append items vector = 
     Seq.append vector items
     |> Vector.ofSeq   
 
-  /// Creates rowvector of specified length, 
-  /// where all values equals 0, 
-  /// except value at specified index, which equals 1
   let E length index = 
     Vector.init length (fun i ->
       if i = index then 1.0
@@ -117,103 +106,78 @@ module Vector = begin
     )
 end
 
-/// Set of extensions to module Microsoft.FSharp.Math.RowVector module.
 [<RequireQualifiedAccess>]
 module RowVector = begin
-  /// Creates list from row-vector.
   let toList (row: rowvec) = row |> List.ofSeq
 
-  /// Appends sequence of items to rowvector
   let append items (row: rowvec) = 
     items
     |> Seq.append row
     |> RowVector.ofSeq
 
-  /// Concatenates two row-vectors.
   let concat (first: rowvec) (second: rowvec) = 
     second
     |> Seq.append first 
     |> RowVector.ofSeq
   
-  /// Maps row-vector using provided mapper function.
   let map mapper (row: rowvec) =
     row
     |> Seq.map mapper
     |> RowVector.ofSeq
   
-  /// Divides every element by provided number. 
   let div num row = 
     if num = 0.0 then invalidArg "num" "Can't divide by zero."
     row |> map (fun el -> el / num)
 
-  /// Creates new rowvector from elements at specified indices.
   let items indices rowvec =
     indices
     |> Seq.map (RowVector.get rowvec) 
     |> RowVector.ofSeq
 
-  /// Creates vector of specified length, 
-  /// where all values equals 0, 
-  /// except value at specified index, which equals 1
   let E length index = 
     RowVector.init length (fun i ->
       if i = index then 1.0 
       else 0.0 
     ) 
 
-  /// RowVector dot product
   let dot (row1: rowvec) (row2: rowvec) =
     (row1, row2)
     ||> Seq.map2 (*)
     |> Seq.sum
 end
 
-/// Set of extensions for Microsoft.FSharp.Math.Matrix module.
 [<RequireQualifiedAccess>]
 module Matrix = begin
-  /// Create matrix using sequence of rows.
-  let ofRows (rows: rowvec seq) = 
-    rows |> Matrix.ofSeq
+  let ofRows (rows: rowvec seq) = Matrix.ofSeq rows 
   
-  /// Create matrix using sequence of columns.
   let ofColumns (columns: vector seq) = 
     columns 
     |> Matrix.ofSeq
     |> Matrix.transpose
 
-  /// Get matrix columns count.
   let colCount (matrix: matrix) = matrix.NumCols
-
-  /// Get matrix rows count.
   let rowCount (matrix: matrix) = matrix.NumRows
 
-  /// Create new matrix using columns at specified indices. 
   let sliceCols indices (matrix: matrix) =
     indices 
     |> List.map (matrix.Column) 
     |> ofColumns
 
-  /// Create new matrix using rows at specified indices.
   let sliceRows indices (matrix: matrix) =
     indices 
     |> List.map (matrix.Row) 
     |> ofRows
 
-  /// Get matrix rows as sequence.
-  let rows (matrix: matrix) =
+  let rows (matrix: matrix) = 
     [0..matrix.NumRows - 1] 
     |> Seq.map matrix.Row
 
-  /// Get matrix columns as sequence.
   let columns (matrix: matrix) =
     [0..matrix.NumCols - 1]
     |> Seq.map matrix.Column
 
-  /// Check if matrix is square.
-  let isSquare (matrix: matrix) =
-    matrix.NumCols = matrix.NumRows
+  let isSquare (matrix: matrix) = matrix.NumCols = matrix.NumRows
 
-  /// Exchange rows at specified indices.
   let exchangeRows first second (matrix:matrix) =
     if first < 0 || first > matrix.NumRows then
       invalidArg "first" "invalid index" 
@@ -233,7 +197,6 @@ module Matrix = begin
       |> Seq.map getRow
       |> ofRows
    
-  /// Augment matrix with another one.
   let augment (first:matrix) (second:matrix) = 
     if first.NumRows <> second.NumRows then
         failwith "Must have same count of rows."
@@ -246,17 +209,14 @@ module Matrix = begin
     |> Seq.map concatRowPair
     |> ofRows
 
-  /// Append row to matrix.
   let appendRow (row: rowvec) matrix = 
     Seq.append (rows matrix) [row]
     |> ofRows
 
-  /// Append column to matrix.
   let appendCol (col: vector) matrix = 
     Seq.append (columns matrix) [col]
     |> ofColumns
 
-  /// Get inversed matrix using Gauss-Jordan elimination.
   let inv (matrix: matrix) = 
     if not (isSquare matrix) then
       invalidArg "matrix" "must be square"
@@ -331,4 +291,3 @@ module Matrix = begin
     |> backward
     |> sliceCols [dim..dim * 2 - 1]
 end
-

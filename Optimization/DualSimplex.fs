@@ -47,14 +47,16 @@ let private dualSimplexImpl task =
   let { A = A; b = b; c = c; d = d}  = task 
   let { down = d'down; up = d'up } = d
   let m, n = A.NumRows, A.NumCols
-  let J = [0.. n - 1]
-  let Jb = initJb A
+  let J, Jb = [0.. n - 1], initJb A
   let Jn = J |> List.without Jb
-  let Ab = A |> Matrix.sliceCols Jb
-  let B = Ab |> Matrix.inv
-  let cb = c |> RowVector.items Jb
+  let B = 
+    A 
+    |> Matrix.sliceCols Jb 
+    |> Matrix.inv
   
+  let cb = c |> RowVector.items Jb
   let y = cb * B
+  
   let delta = 
     J |> List.map (fun j ->
            let A'j = A.Column j
@@ -82,10 +84,10 @@ let private dualSimplexImpl task =
 
       let x'n = 
         Jn |> Seq.map (fun j ->
-               match j with
-               | InSeq Jnplus -> d'down.[j]
-               | InSeq Jnminus -> d'up.[j]
-               | _ -> failwith "No more indices expected."
+                match j with
+                | InSeq Jnplus -> d'down.[j]
+                | InSeq Jnminus -> d'up.[j]
+                | _ -> failwith "No more indices expected."
               )    
 
       let x'b = 
@@ -130,11 +132,12 @@ let private dualSimplexImpl task =
   
     if isOptimal then Some(Jb, x)
     else
-      let (j'k, _, m'jk) = 
-        criteriaRes |> Seq.find (snd3 >> not) 
-  
-      let k = Jb |> List.findIndex ((=) j'k)
-      let e'k = RowVector.E m k
+      let (j'k, _, m'jk) = criteriaRes |> Seq.find (snd3 >> not) 
+      let e'k = 
+        Jb 
+        |> List.findIndex ((=) j'k)
+        |> RowVector.E m 
+      
       let delta'y = m'jk * (e'k * B)
   
       let M = 
@@ -147,14 +150,14 @@ let private dualSimplexImpl task =
              )
       
       let steps = 
-        Jn |> Seq.map (fun j -> 
-                let m'j = M.[j]
-                match (j, m'j) with
-                  | (InSeq Jnplus, Less 0.0) 
-                  | (InSeq Jnminus, Bigger 0.0) -> 
-                     j, -delta.[j] / m'j
-                  | _ -> j, infinity
-              )
+        Jn 
+        |> Seq.map (fun j -> 
+             match (j, M.[j]) with
+             | (InSeq Jnplus, Less 0.0) 
+             | (InSeq Jnminus, Bigger 0.0) -> 
+                j, -delta.[j] / M.[j]
+             | _ -> j, infinity
+           )
   
       let (j'0, step'0) = steps |> Seq.minBy snd
   
@@ -190,7 +193,7 @@ let private dualSimplexImpl task =
   loop (delta, Jb, Jnplus, Jnminus)
 
 let dualSimplex (A, b, c, d) =
-  let d = {down = fst d; up = snd d}
-  let task = {A = A; b = b; c = c; d = d}
+  let d = { down = fst d; up = snd d }
+  let task = { A = A; b = b; c = c; d = d }
 
   dualSimplexImpl task

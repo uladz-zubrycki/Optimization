@@ -20,8 +20,8 @@ let createF table  =
   fun x -> dict.[x]
 
 let case0 () = 
-  let f1 = createF [(0, 0); (1, 3); (2, 4); (3, 5); (4, 8); (5, 9); (6, 10)]
-  let f2 = createF [(0, 0); (1, 2); (2, 3); (3, 7); (4, 9); (5, 12); (6, 13)]
+  let f1 = createF [(0, 0); (1, 3); (2, 4); (3, 5); (4, 8);  (5, 9);  (6, 10)]
+  let f2 = createF [(0, 0); (1, 2); (2, 3); (3, 7); (4, 9);  (5, 12); (6, 13)]
   let f3 = createF [(0, 0); (1, 1); (2, 2); (3, 6); (4, 11); (5, 11); (6, 13)]
 
   let functions = [f1; f2; f3]
@@ -121,7 +121,8 @@ let test (expected, data) =
   actual |> expected.Equals
 
 let cases =
-  [case0;
+  [
+   case0;
    case1;
    case2;
    case3;
@@ -129,7 +130,8 @@ let cases =
    case5;
    case6;
    case7;
-   case8;]
+   case8;
+  ]
 
 let results =
   cases
